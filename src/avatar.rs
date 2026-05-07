@@ -11,6 +11,7 @@ const TILE_SZ: u32 = 64; // 64 x 64 tiles
 const WALK_FRAMES: usize = 9; // 9 cols per walking row
 //const MOVE_SPEED: f32 = 140.0; // pixels per second
 const ANIM_DT: f32 = 0.1; // seconds per frame
+const PLAYER_Z: f32 = 20.0;
 
 /// Interface to add the code in this file the the game state.
 pub struct AvatarPlugin;
@@ -120,7 +121,7 @@ fn spawn_avatar(
                 index: atlas_index_for(start_direct, 0),
             },
         ),
-        Transform::from_translation(Vec3::ZERO),
+        Transform::from_translation(Vec3::new(0.0, 0.0, PLAYER_Z)).with_scale(Vec3::splat(0.8)),
         Avatar,
         AnimationState {
             facing: start_direct,

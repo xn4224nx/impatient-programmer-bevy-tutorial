@@ -14,6 +14,7 @@ use crate::world::{
 /* Define the size of the map size. */
 pub const GRID_X: u32 = 25;
 pub const GRID_Y: u32 = 18;
+const GRID_Z: u32 = 2;
 
 const ASSETS_PATH: &str = "tilemaps";
 const TILEMAP_FILE: &str = "tilemap_grassland.png";
@@ -25,8 +26,6 @@ pub const TILE_SIZE: f32 = 32.0;
 const NODE_SIZE: Vec3 = Vec3::new(TILE_SIZE, TILE_SIZE, 1.0);
 
 const ASSETS_SCALE: Vec3 = Vec3::ONE;
-
-const GRID_Z: u32 = 1;
 
 pub fn map_pixel_dimensions() -> Vec2 {
     Vec2::new(TILE_SIZE * GRID_X as f32, TILE_SIZE * GRID_Y as f32)

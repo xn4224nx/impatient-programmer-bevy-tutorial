@@ -174,6 +174,138 @@ fn build_grass_layer(
     ]);
 }
 
+fn build_yellow_grass_layer(
+    terrain_model_builder: &mut TerrainModelBuilder,
+    terrain_sockets: &TerrianSockets,
+    socket_collection: &mut SocketCollection,
+) {
+    /* Empty space in the yellow grass layer. */
+    terrain_model_builder.create_model(
+        SocketsCartesian3D::Simple {
+            x_pos: terrain_sockets.void,
+            x_neg: terrain_sockets.void,
+            z_pos: terrain_sockets.yellow_grass.layer_up,
+            z_neg: terrain_sockets.yellow_grass.layer_down,
+            y_pos: terrain_sockets.void,
+            y_neg: terrain_sockets.void,
+        },
+        Vec::new(),
+    );
+
+    /* Full yellow grass tile. */
+    terrain_model_builder
+        .create_model(
+            SocketsCartesian3D::Simple {
+                x_pos: terrain_sockets.grass.material,
+                x_neg: terrain_sockets.grass.material,
+                z_pos: terrain_sockets.yellow_grass.layer_up,
+                z_neg: terrain_sockets.yellow_grass.yellow_grass_fill_down,
+                y_pos: terrain_sockets.grass.material,
+                y_neg: terrain_sockets.grass.material,
+            },
+            vec![SpawnableAsset::new("yellow_grass")],
+        )
+        .with_weight(0.5);
+
+    /* Outer Corner Tile Template */
+    let yellow_grass_corner_out = SocketsCartesian3D::Simple {
+        x_pos: terrain_sockets.grass.void_and_grass,
+        x_neg: terrain_sockets.void,
+        z_pos: terrain_sockets.yellow_grass.layer_up,
+        z_neg: terrain_sockets.yellow_grass.yellow_grass_fill_down,
+        y_pos: terrain_sockets.void,
+        y_neg: terrain_sockets.grass.grass_and_void,
+    }
+    .to_template();
+
+    /* Inner Corner Template */
+    let yellow_grass_corner_in = SocketsCartesian3D::Simple {
+        x_pos: terrain_sockets.grass.grass_and_void,
+        x_neg: terrain_sockets.grass.material,
+        z_pos: terrain_sockets.yellow_grass.layer_up,
+        z_neg: terrain_sockets.yellow_grass.yellow_grass_fill_down,
+        y_pos: terrain_sockets.grass.material,
+        y_neg: terrain_sockets.grass.void_and_grass,
+    }
+    .to_template();
+
+    /* Side Edge Template */
+    let yellow_grass_corner_side = SocketsCartesian3D::Simple {
+        x_pos: terrain_sockets.grass.void_and_grass,
+        x_neg: terrain_sockets.grass.grass_and_void,
+        z_pos: terrain_sockets.yellow_grass.layer_up,
+        z_neg: terrain_sockets.yellow_grass.yellow_grass_fill_down,
+        y_pos: terrain_sockets.void,
+        y_neg: terrain_sockets.grass.material,
+    }
+    .to_template();
+
+    /* Rotated versions of the outer corner. */
+    terrain_model_builder.create_model(
+        yellow_grass_corner_out.clone(),
+        vec![SpawnableAsset::new("yellow_grass_corner_out_tl")],
+    );
+    terrain_model_builder.create_model(
+        yellow_grass_corner_out.rotated(ModelRotation::Rot90, Direction::ZForward),
+        vec![SpawnableAsset::new("yellow_grass_corner_out_bl")],
+    );
+    terrain_model_builder.create_model(
+        yellow_grass_corner_out.rotated(ModelRotation::Rot180, Direction::ZForward),
+        vec![SpawnableAsset::new("yellow_grass_corner_out_br")],
+    );
+    terrain_model_builder.create_model(
+        yellow_grass_corner_out.rotated(ModelRotation::Rot270, Direction::ZForward),
+        vec![SpawnableAsset::new("yellow_grass_corner_out_tr")],
+    );
+
+    /* Rotated versions of the inner corner. */
+    terrain_model_builder.create_model(
+        yellow_grass_corner_in.clone(),
+        vec![SpawnableAsset::new("yellow_grass_corner_in_tl")],
+    );
+    terrain_model_builder.create_model(
+        yellow_grass_corner_in.rotated(ModelRotation::Rot90, Direction::ZForward),
+        vec![SpawnableAsset::new("yellow_grass_corner_in_bl")],
+    );
+    terrain_model_builder.create_model(
+        yellow_grass_corner_in.rotated(ModelRotation::Rot180, Direction::ZForward),
+        vec![SpawnableAsset::new("yellow_grass_corner_in_br")],
+    );
+    terrain_model_builder.create_model(
+        yellow_grass_corner_in.rotated(ModelRotation::Rot270, Direction::ZForward),
+        vec![SpawnableAsset::new("yellow_grass_corner_in_tr")],
+    );
+
+    /* Rotated versions of the side edges. */
+    terrain_model_builder.create_model(
+        yellow_grass_corner_side.clone(),
+        vec![SpawnableAsset::new("yellow_grass_side_t")],
+    );
+    terrain_model_builder.create_model(
+        yellow_grass_corner_side.rotated(ModelRotation::Rot90, Direction::ZForward),
+        vec![SpawnableAsset::new("yellow_grass_side_l")],
+    );
+    terrain_model_builder.create_model(
+        yellow_grass_corner_side.rotated(ModelRotation::Rot180, Direction::ZForward),
+        vec![SpawnableAsset::new("yellow_grass_side_b")],
+    );
+    terrain_model_builder.create_model(
+        yellow_grass_corner_side.rotated(ModelRotation::Rot270, Direction::ZForward),
+        vec![SpawnableAsset::new("yellow_grass_side_r")],
+    );
+
+    /* Add connection rules. */
+    socket_collection
+        .add_rotated_connection(
+            terrain_sockets.grass.layer_up,
+            vec![terrain_sockets.yellow_grass.layer_down],
+        )
+        .add_rotated_connection(
+            terrain_sockets.yellow_grass.yellow_grass_fill_down,
+            vec![terrain_sockets.grass.grass_fill_up],
+        );
+}
+
 pub fn build_world() -> (
     Vec<Vec<SpawnableAsset>>,
     ModelCollection<Cartesian3D>,
@@ -192,6 +324,13 @@ pub fn build_world() -> (
 
     /* Build the grass layer. */
     build_grass_layer(
+        &mut terrain_model_builder,
+        &terrain_sockets,
+        &mut socket_collection,
+    );
+
+    /* Build the yellow grass layer. */
+    build_yellow_grass_layer(
         &mut terrain_model_builder,
         &terrain_sockets,
         &mut socket_collection,

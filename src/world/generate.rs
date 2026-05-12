@@ -14,7 +14,7 @@ use crate::world::{
 /* Define the size of the map size. */
 pub const GRID_X: u32 = 25;
 pub const GRID_Y: u32 = 18;
-const GRID_Z: u32 = 3;
+const GRID_Z: u32 = 4;
 
 const ASSETS_PATH: &str = "tilemaps";
 const TILEMAP_FILE: &str = "tilemap_grassland.png";

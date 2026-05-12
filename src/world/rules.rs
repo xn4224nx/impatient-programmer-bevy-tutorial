@@ -306,6 +306,152 @@ fn build_yellow_grass_layer(
         );
 }
 
+fn build_water_layer(
+    terrain_model_builder: &mut TerrainModelBuilder,
+    terrain_sockets: &TerrianSockets,
+    socket_collections: &mut SocketCollection,
+) {
+    /* Void Model - Dry Land. */
+    terrain_model_builder.create_model(
+        SocketsCartesian3D::Multiple {
+            x_pos: vec![terrain_sockets.void],
+            x_neg: vec![terrain_sockets.void],
+            z_pos: vec![
+                terrain_sockets.water.layer_up,
+                terrain_sockets.water.ground_up,
+            ],
+            z_neg: vec![terrain_sockets.water.layer_down],
+            y_pos: vec![terrain_sockets.void],
+            y_neg: vec![terrain_sockets.void],
+        },
+        Vec::new(),
+    );
+
+    /* Main water Tile */
+    const WATER_WEIGHT: f32 = 0.02;
+    terrain_model_builder
+        .create_model(
+            SocketsCartesian3D::Simple {
+                x_pos: terrain_sockets.water.material,
+                x_neg: terrain_sockets.water.material,
+                z_pos: terrain_sockets.water.layer_up,
+                z_neg: terrain_sockets.water.layer_down,
+                y_pos: terrain_sockets.water.material,
+                y_neg: terrain_sockets.water.material,
+            },
+            vec![SpawnableAsset::new("water")],
+        )
+        .with_weight(WATER_WEIGHT * 10.0);
+
+    /* Outer Corner Tile Template */
+    let water_corner_out = SocketsCartesian3D::Simple {
+        x_pos: terrain_sockets.water.void_and_water,
+        x_neg: terrain_sockets.void,
+        z_pos: terrain_sockets.water.layer_up,
+        z_neg: terrain_sockets.water.layer_down,
+        y_pos: terrain_sockets.void,
+        y_neg: terrain_sockets.water.water_and_void,
+    }
+    .to_template()
+    .with_weight(WATER_WEIGHT);
+
+    /* Inner Corner Template */
+    let water_corner_in = SocketsCartesian3D::Simple {
+        x_pos: terrain_sockets.water.water_and_void,
+        x_neg: terrain_sockets.water.material,
+        z_pos: terrain_sockets.water.layer_up,
+        z_neg: terrain_sockets.water.layer_down,
+        y_pos: terrain_sockets.water.material,
+        y_neg: terrain_sockets.water.void_and_water,
+    }
+    .to_template()
+    .with_weight(WATER_WEIGHT);
+
+    /* Side Edge Template */
+    let water_corner_side = SocketsCartesian3D::Simple {
+        x_pos: terrain_sockets.water.void_and_water,
+        x_neg: terrain_sockets.water.water_and_void,
+        z_pos: terrain_sockets.water.layer_up,
+        z_neg: terrain_sockets.water.layer_down,
+        y_pos: terrain_sockets.void,
+        y_neg: terrain_sockets.water.material,
+    }
+    .to_template()
+    .with_weight(WATER_WEIGHT);
+
+    /* Rotated versions of the outer corner. */
+    terrain_model_builder.create_model(
+        water_corner_out.clone(),
+        vec![SpawnableAsset::new("water_corner_out_tl")],
+    );
+    terrain_model_builder.create_model(
+        water_corner_out.rotated(ModelRotation::Rot90, Direction::ZForward),
+        vec![SpawnableAsset::new("water_corner_out_bl")],
+    );
+    terrain_model_builder.create_model(
+        water_corner_out.rotated(ModelRotation::Rot180, Direction::ZForward),
+        vec![SpawnableAsset::new("water_corner_out_br")],
+    );
+    terrain_model_builder.create_model(
+        water_corner_out.rotated(ModelRotation::Rot270, Direction::ZForward),
+        vec![SpawnableAsset::new("water_corner_out_tr")],
+    );
+
+    /* Rotated versions of the inner corner. */
+    terrain_model_builder.create_model(
+        water_corner_in.clone(),
+        vec![SpawnableAsset::new("water_corner_in_tl")],
+    );
+    terrain_model_builder.create_model(
+        water_corner_in.rotated(ModelRotation::Rot90, Direction::ZForward),
+        vec![SpawnableAsset::new("water_corner_in_bl")],
+    );
+    terrain_model_builder.create_model(
+        water_corner_in.rotated(ModelRotation::Rot180, Direction::ZForward),
+        vec![SpawnableAsset::new("water_corner_in_br")],
+    );
+    terrain_model_builder.create_model(
+        water_corner_in.rotated(ModelRotation::Rot270, Direction::ZForward),
+        vec![SpawnableAsset::new("water_corner_in_tr")],
+    );
+
+    /* Rotated versions of the side edges. */
+    terrain_model_builder.create_model(
+        water_corner_side.clone(),
+        vec![SpawnableAsset::new("water_side_t")],
+    );
+    terrain_model_builder.create_model(
+        water_corner_side.rotated(ModelRotation::Rot90, Direction::ZForward),
+        vec![SpawnableAsset::new("water_side_l")],
+    );
+    terrain_model_builder.create_model(
+        water_corner_side.rotated(ModelRotation::Rot180, Direction::ZForward),
+        vec![SpawnableAsset::new("water_side_b")],
+    );
+    terrain_model_builder.create_model(
+        water_corner_side.rotated(ModelRotation::Rot270, Direction::ZForward),
+        vec![SpawnableAsset::new("water_side_r")],
+    );
+
+    /* Add connection rules. */
+    socket_collections.add_connections(vec![
+        (
+            terrain_sockets.water.material,
+            vec![terrain_sockets.water.material],
+        ),
+        (
+            terrain_sockets.water.water_and_void,
+            vec![terrain_sockets.water.void_and_water],
+        ),
+    ]);
+
+    /* Connect the water layer to the yellow grass layer. */
+    socket_collections.add_rotated_connection(
+        terrain_sockets.yellow_grass.layer_up,
+        vec![terrain_sockets.water.layer_down],
+    );
+}
+
 pub fn build_world() -> (
     Vec<Vec<SpawnableAsset>>,
     ModelCollection<Cartesian3D>,
@@ -331,6 +477,13 @@ pub fn build_world() -> (
 
     /* Build the yellow grass layer. */
     build_yellow_grass_layer(
+        &mut terrain_model_builder,
+        &terrain_sockets,
+        &mut socket_collection,
+    );
+
+    /* Build the water layer. */
+    build_water_layer(
         &mut terrain_model_builder,
         &terrain_sockets,
         &mut socket_collection,
